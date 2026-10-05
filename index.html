@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compra Gijón</title>
+<meta name="description" content="Lista de la compra de Gijón: editable, con categorías propias, marcado de pendientes, orden manual, sincronización entre dispositivos y copia de seguridad.">
+<meta name="theme-color" content="#3E7CA6">
+
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gijón">
+
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<style>
+  :root{
+    --bg:#F1F6FA;
+    --surface:#FFFFFF;
+    --surface-soft:#E7F0F7;
+    --ink:#2A241C;
+    --ink-soft:#7A7060;
+    --ink-faint:#B3A996;
+    --border:#E7DFD1;
+    --accent:#3E7CA6;
+    --accent-ink:#FFFFFF;
+    --cat-alimentacion:#C1662F;
+    --cat-bebidas:#3E7CA6;
+    --cat-aseo:#9A6FB0;
+    --cat-limpieza:#2F9C8F;
+    --cat-varios:#8C7A4E;
+    --good:#3E7CA6;
+    --warn:#B98A2E;
+    --shadow: 0 1px 2px rgba(42,36,28,0.06), 0 4px 14px rgba(42,36,28,0.05);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#141A1F;
+      --surface:#1C232A;
+      --surface-soft:#212A32;
+      --ink:#E7EEF3;
+      --ink-soft:#9DB0BE;
+      --ink-faint:#5C6E7B;
+      --border:#2C3841;
+      --accent:#6FAEDC;
+      --accent-ink:#0E2333;
+      --cat-alimentacion:#E08A54;
+      --cat-bebidas:#6DA6CC;
+      --cat-aseo:#BA98D6;
+      --cat-limpieza:#5CC4B5;
+      --cat-varios:#C7B074;
+      --good:#6FAEDC;
+      --warn:#E8C36F;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.25);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#141A1F;
+    --surface:#1C232A;
+    --surface-soft:#212A32;
+    --ink:#E7EEF3;
+    --ink-soft:#9DB0BE;
+    --ink-faint:#5C6E7B;
+    --border:#2C3841;
+    --accent:#6FAEDC;
+    --accent-ink:#0E2333;
+    --cat-alimentacion:#E08A54;
+    --cat-bebidas:#6DA6CC;
+    --cat-aseo:#BA98D6;
+    --cat-limpieza:#5CC4B5;
+    --cat-varios:#C7B074;
+    --good:#6FAEDC;
+    --warn:#E8C36F;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 14px rgba(0,0,0,0.25);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding-inline:16px;
+    padding-block:0 32px;
+  }
+  h1,h2,h3{font-family:"Fraunces", Georgia, serif;}
+
+  .wrap{max-width:600px;margin:0 auto;}
+
+  header.top{
+    position:sticky;
+    top:env(safe-area-inset-top, 0px);
+    background:var(--bg);
+    padding-block:20px 14px;
+    z-index:5;
+  }
+  header.top h1{
+    font-size:1.9rem;
+    font-weight:600;
+    margin:0 0 4px;
+    text-wrap:balance;
+    letter-spacing:-0.01em;
+  }
+  header.top .sub{
+    color:var(--ink-soft);
+    font-size:0.92rem;
+    margin:0 0 10px;
+  }
+
+  p.sync-status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:0.76rem;
+    color:var(--ink-faint);
+    margin:0 0 14px;
+  }
+  p.sync-status .dot{
+    width:7px;height:7px;
+    border-radius:50%;
+    background:var(--ink-faint);
+    flex-shrink:0;
+    transition:background .2s ease;
+  }
+  p.sync-status.online .dot{background:var(--good);}
+  p.sync-status.offline .dot{background:var(--warn);}
+
+  button.pending-toggle{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:0.85rem;
+    font-family:inherit;
+    color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    padding:7px 14px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  button.pending-toggle strong{
+    color:var(--accent);
+    font-size:0.98rem;
+  }
+  button.pending-toggle:hover{border-color:var(--accent);}
+  button.pending-toggle.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--accent-ink);
+  }
+  button.pending-toggle.active strong{ color:var(--accent-ink); }
+
+  main{display:flex;flex-direction:column;gap:18px;margin-top:6px;}
+
+  p.empty-note{
+    color:var(--ink-soft);
+    font-size:0.92rem;
+    background:var(--surface);
+    border:1px dashed var(--border);
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+  }
+
+  section.category{
+    --cat-color: var(--cat-light, var(--accent));
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:4px solid var(--cat-color, var(--accent));
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) section.category{
+      --cat-color: var(--cat-dark, var(--cat-light, var(--accent)));
+    }
+  }
+  :root[data-theme="dark"] section.category{
+    --cat-color: var(--cat-dark, var(--cat-light, var(--accent)));
+  }
+  .cat-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:12px 16px 6px;
+  }
+  .cat-head-info{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    min-width:0;
+  }
+  .cat-head h2{
+    font-size:1.15rem;
+    font-weight:600;
+    margin:0;
+    color:var(--cat-color, var(--ink));
+    overflow-wrap:anywhere;
+  }
+  .cat-count{
+    font-size:0.78rem;
+    color:var(--ink-faint);
+    font-variant-numeric:tabular-nums;
+    flex-shrink:0;
+  }
+  .cat-head-actions{
+    display:flex;
+    align-items:center;
+    gap:1px;
+    flex-shrink:0;
+  }
+  form.cat-rename-form{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:1;
+    min-width:0;
+  }
+  form.cat-rename-form input[type="text"]{
+    flex:1;
+    min-width:0;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:5px 9px;
+    font-size:1rem;
+    font-family:"Fraunces", Georgia, serif;
+    color:var(--ink);
+  }
+  form.cat-rename-form button{
+    border:none;
+    background:transparent;
+    color:var(--ink-faint);
+    font-size:1.1rem;
+    line-height:1;
+    padding:4px 6px;
+    border-radius:7px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  form.cat-rename-form button[type="submit"]:hover{background:var(--surface-soft); color:var(--good);}
+  form.cat-rename-form button.cat-rename-cancel:hover{background:var(--surface-soft); color:#B0483F;}
+
+  ul.items{list-style:none;margin:0;padding:0 8px 4px;}
+  ul.items:empty::after{
+    content:"Sin productos todavía";
+    display:block;
+    color:var(--ink-faint);
+    font-size:0.88rem;
+    padding:8px 8px 12px;
+    font-style:italic;
+  }
+  li.item{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    padding:3px 4px;
+    border-radius:8px;
+  }
+  li.item:hover{background:var(--surface-soft);}
+  li.item.dragging{
+    background:var(--surface-soft);
+    box-shadow:0 6px 16px rgba(0,0,0,0.18);
+    opacity:0.92;
+  }
+
+  section.category.dragging{
+    box-shadow:0 10px 24px rgba(0,0,0,0.18);
+    opacity:0.94;
+  }
+
+  label.check{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1;
+    min-width:0;
+    cursor:pointer;
+    padding-block:4px;
+  }
+  input[type="checkbox"]{
+    appearance:none;
+    width:20px;height:20px;
+    min-width:20px;
+    border-radius:6px;
+    border:1.6px solid var(--border);
+    background:var(--surface);
+    display:grid;
+    place-content:center;
+    cursor:pointer;
+  }
+  input[type="checkbox"]::after{
+    content:"";
+    width:10px;height:10px;
+    clip-path:polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+    background:var(--accent-ink);
+    transform:scale(0);
+    transition:transform .12s ease;
+  }
+  input[type="checkbox"]:checked{
+    background:var(--cat-color, var(--accent));
+    border-color:var(--cat-color, var(--accent));
+  }
+  input[type="checkbox"]:checked::after{transform:scale(1);}
+
+  .item-text{
+    font-size:0.97rem;
+    line-height:1.2;
+    overflow-wrap:anywhere;
+  }
+  li.item.tobuy{
+    background:color-mix(in srgb, var(--cat-color, var(--accent)) 12%, transparent);
+  }
+  li.item.tobuy .item-text{
+    color:var(--ink);
+    font-weight:600;
+  }
+
+  button.del{
+    border:none;
+    background:transparent;
+    color:var(--ink-faint);
+    font-size:1.05rem;
+    line-height:1;
+    padding:4px 5px;
+    border-radius:7px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  button.del:hover{background:var(--surface-soft); color:#B0483F;}
+
+  button.drag-handle{
+    border:none;
+    background:transparent;
+    color:var(--ink-faint);
+    width:28px;
+    height:30px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    padding:0;
+    border-radius:7px;
+    cursor:grab;
+    touch-action:none;
+    flex-shrink:0;
+  }
+  button.drag-handle span{
+    width:15px;
+    height:2px;
+    border-radius:1px;
+    background:currentColor;
+  }
+  button.drag-handle:hover{background:var(--surface-soft); color:var(--ink);}
+  li.item.dragging button.drag-handle{cursor:grabbing;}
+
+  button.cat-edit, button.cat-delete{
+    border:none;
+    background:transparent;
+    color:var(--ink-faint);
+    font-size:0.95rem;
+    line-height:1;
+    padding:5px 6px;
+    border-radius:7px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  button.cat-edit:hover{background:var(--surface-soft); color:var(--ink);}
+  button.cat-delete:hover{background:var(--surface-soft); color:#B0483F;}
+
+  button.cat-drag-handle{
+    border:none;
+    background:transparent;
+    color:var(--ink-faint);
+    width:26px;
+    height:28px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    padding:0;
+    border-radius:7px;
+    cursor:grab;
+    touch-action:none;
+    flex-shrink:0;
+  }
+  button.cat-drag-handle span{
+    width:14px;
+    height:2px;
+    border-radius:1px;
+    background:currentColor;
+  }
+  button.cat-drag-handle:hover{background:var(--surface-soft); color:var(--ink);}
+  section.category.dragging button.cat-drag-handle{cursor:grabbing;}
+
+  button.del:focus-visible, input:focus-visible, button:focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  form.add-form{
+    display:flex;
+    gap:8px;
+    padding:8px 16px 14px;
+    border-top:1px solid var(--border);
+    margin-top:2px;
+  }
+  form.add-form input[type="text"]{
+    flex:1;
+    min-width:0;
+    background:var(--surface-soft);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:9px 12px;
+    font-size:0.92rem;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  form.add-form input[type="text"]::placeholder{color:var(--ink-faint);}
+  form.add-form button{
+    border:none;
+    background:var(--cat-color, var(--accent));
+    color:var(--accent-ink);
+    width:38px;
+    border-radius:9px;
+    font-size:1.15rem;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  form.add-form button:hover{filter:brightness(1.06);}
+
+  section.add-category{
+    margin-top:4px;
+  }
+  section.add-category form{
+    display:flex;
+    gap:8px;
+  }
+  section.add-category input[type="text"]{
+    flex:1;
+    min-width:0;
+    background:var(--surface);
+    border:1px dashed var(--border);
+    border-radius:12px;
+    padding:11px 14px;
+    font-size:0.92rem;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  section.add-category input[type="text"]::placeholder{color:var(--ink-faint);}
+  section.add-category button{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-soft);
+    padding:0 16px;
+    border-radius:12px;
+    font-size:0.88rem;
+    font-family:inherit;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  section.add-category button:hover{border-color:var(--accent); color:var(--accent);}
+
+  footer.actions{
+    display:flex;
+    justify-content:center;
+    margin-top:10px;
+  }
+  button.reset-all{
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink-soft);
+    font-size:0.85rem;
+    font-family:inherit;
+    padding:9px 16px;
+    border-radius:999px;
+    cursor:pointer;
+  }
+  button.reset-all:hover{border-color:var(--accent); color:var(--accent);}
+  button.reset-all:disabled{opacity:0.45; cursor:default;}
+  button.reset-all:disabled:hover{border-color:var(--border); color:var(--ink-soft);}
+
+  section.backup-section{
+    margin-top:22px;
+    padding:14px 16px 16px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+  }
+  section.backup-section h3{
+    font-size:0.98rem;
+    margin:0 0 4px;
+    color:var(--ink);
+  }
+  .backup-hint{
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+  .backup-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .backup-actions button{
+    border:1px solid var(--border);
+    background:var(--surface-soft);
+    color:var(--ink);
+    padding:8px 14px;
+    border-radius:10px;
+    font-size:0.85rem;
+    font-family:inherit;
+    cursor:pointer;
+  }
+  .backup-actions button:hover{border-color:var(--accent); color:var(--accent);}
+
+  @media (max-width:420px){
+    header.top h1{font-size:1.6rem;}
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Figtree:wght@400;500;600&display=swap">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <h1>Compra Gijón</h1>
+    <p class="sub" id="subtitle">Marca lo que necesitas comprar.</p>
+    <p class="sync-status" id="syncStatus"><span class="dot"></span><span id="syncText">Conectando…</span></p>
+    <button class="pending-toggle" id="pendingToggle" type="button">
+      <strong id="pendingCount">0</strong>
+      <span class="toggle-label">por comprar — ver solo estos</span>
+    </button>
+  </header>
+  <main id="app"></main>
+
+  <section class="add-category" id="addCategorySection">
+    <form id="addCategoryForm">
+      <input type="text" id="newCategoryName" placeholder="Nueva categoría… (p. ej. Mascotas)" autocomplete="off">
+      <button type="submit">Crear categoría</button>
+    </form>
+  </section>
+
+  <footer class="actions">
+    <button class="reset-all" id="resetAll">Desmarcar todo</button>
+  </footer>
+
+  <section class="backup-section">
+    <h3>Copia de seguridad</h3>
+    <p class="backup-hint">Los cambios ya se sincronizan solos entre tus dispositivos. Usa "Descargar copia" solo como respaldo extra. Usa "Descargar catálogo" para pasar tus categorías y productos (sin marcas) a Compra Otero: descárgalo aquí y pulsa "Restaurar copia" en la otra app.</p>
+    <div class="backup-actions">
+      <button type="button" id="exportBackup">Descargar copia</button>
+      <button type="button" id="exportCatalog">Descargar catálogo</button>
+      <button type="button" id="importBackupBtn">Restaurar copia</button>
+      <input type="file" id="importBackupInput" accept="application/json" hidden>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+
+  "use strict";
+
+  var STORAGE_KEY = "compra-gijon-state";
+  var CUSTOM_PALETTE = [
+    {light:"#B0546B", dark:"#E0A0B4"},
+    {light:"#5B63B7", dark:"#A6ABE8"},
+    {light:"#2E8F9E", dark:"#6FCBDA"},
+    {light:"#B98A2E", dark:"#E8C36F"},
+    {light:"#6E9E3A", dark:"#A9D66E"},
+    {light:"#6B7280", dark:"#A6ADBB"}
+  ];
+
+  var DEFAULT_STATE = {
+    categories: [
+      {
+        key: "alimentacion",
+        label: "Alimentación",
+        color: "var(--cat-alimentacion)",
+        items: [
+          {id:"a1", text:"Pan", toBuy:false},
+          {id:"a2", text:"Leche", toBuy:false},
+          {id:"a3", text:"Huevos", toBuy:false},
+          {id:"a4", text:"Arroz", toBuy:false},
+          {id:"a5", text:"Tomates", toBuy:false},
+          {id:"a6", text:"Pollo", toBuy:false},
+          {id:"a7", text:"Queso", toBuy:false},
+          {id:"a8", text:"Aceite de oliva", toBuy:false}
+        ]
+      },
+      {
+        key: "bebidas",
+        label: "Bebidas",
+        color: "var(--cat-bebidas)",
+        items: [
+          {id:"b1", text:"Agua", toBuy:false},
+          {id:"b2", text:"Vino tinto", toBuy:false},
+          {id:"b3", text:"Zumo de naranja", toBuy:false},
+          {id:"b4", text:"Café", toBuy:false}
+        ]
+      },
+      {
+        key: "aseo",
+        label: "Aseo",
+        color: "var(--cat-aseo)",
+        items: [
+          {id:"s1", text:"Champú", toBuy:false},
+          {id:"s2", text:"Gel de ducha", toBuy:false},
+          {id:"s3", text:"Pasta de dientes", toBuy:false},
+          {id:"s4", text:"Papel higiénico", toBuy:false}
+        ]
+      },
+      {
+        key: "limpieza",
+        label: "Limpieza",
+        color: "var(--cat-limpieza)",
+        items: [
+          {id:"l1", text:"Detergente", toBuy:false},
+          {id:"l2", text:"Lejía", toBuy:false},
+          {id:"l3", text:"Bolsas de basura", toBuy:false},
+          {id:"l4", text:"Limpiacristales", toBuy:false}
+        ]
+      },
+      {
+        key: "varios",
+        label: "Varios",
+        color: "var(--cat-varios)",
+        items: [
+          {id:"v1", text:"Pilas", toBuy:false},
+          {id:"v2", text:"Bombillas", toBuy:false}
+        ]
+      }
+    ]
+  };
+
+  function cloneDefault(){
+    return JSON.parse(JSON.stringify(DEFAULT_STATE));
+  }
+
+  function normalizeItems(items){
+    return items.map(function(it){
+      return {
+        id: it.id,
+        text: it.text,
+        toBuy: typeof it.toBuy === "boolean" ? it.toBuy : false
+      };
+    });
+  }
+
+  // Combina lo recibido (de la nube o de una copia de seguridad) con la
+  // plantilla: conserva el orden, los nombres, los productos y las marcas
+  // tal como llegan. Las categorías por defecto que faltan (porque el
+  // usuario las eliminó) no se vuelven a añadir solas.
+  function reconcile(saved){
+    var defByKey = {};
+    cloneDefault().categories.forEach(function(c){ defByKey[c.key] = c; });
+
+    var merged = [];
+    var seen = {};
+    var incoming = Array.isArray(saved.categories) ? saved.categories : [];
+    incoming.forEach(function(c){
+      if(!c || !c.key || seen[c.key]) return;
+      seen[c.key] = true;
+      var def = defByKey[c.key];
+      if(def){
+        merged.push({
+          key: def.key,
+          // Se respeta el nombre si el usuario ha renombrado la categoría;
+          // el color de las categorías por defecto se mantiene fijo.
+          label: c.label || def.label,
+          color: def.color,
+          // Firebase borra las listas vacías al guardarlas: si "items" no
+          // llega, es que la categoría se quedó sin productos, no que haya
+          // que descartarla.
+          items: normalizeItems(c.items || [])
+        });
+      } else {
+        merged.push({
+          key: c.key,
+          label: c.label || c.key,
+          color: c.color || null,
+          lightColor: c.lightColor || null,
+          darkColor: c.darkColor || null,
+          items: normalizeItems(c.items || [])
+        });
+      }
+    });
+
+    return {categories: merged};
+  }
+
+  function loadLocalCache(){
+    try{
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.categories)) return reconcile(parsed);
+      }
+    }catch(e){ /* localStorage no disponible: seguimos con el estado por defecto */ }
+    return cloneDefault();
+  }
+
+  function saveLocalCache(){
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }catch(e){ /* no se pudo guardar en caché local: seguimos igualmente */ }
+  }
+
+  // --- Firebase: sincronización en tiempo real entre dispositivos ---
+  var firebaseConfig = {
+    apiKey: "AIzaSyA51LrR0fzSyeoH5-d6jwuLbriVDwYrWHo",
+    authDomain: "lista-compra-gijon.firebaseapp.com",
+    databaseURL: "https://lista-compra-gijon-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "lista-compra-gijon",
+    storageBucket: "lista-compra-gijon.firebasestorage.app",
+    messagingSenderId: "480620503938",
+    appId: "1:480620503938:web:4a2df4a28e90d4f18f259b"
+  };
+
+  var fbApp = initializeApp(firebaseConfig);
+  var db = getDatabase(fbApp);
+  var stateRef = ref(db, "state");
+  var connectedRef = ref(db, ".info/connected");
+
+  // Estado en memoria: arranca con la última copia guardada en este
+  // dispositivo (para que la app se vea al instante, incluso sin conexión)
+  // y en cuanto llega la primera respuesta de Firebase, la nube manda.
+  var state = loadLocalCache();
+  var onlyPending = false;
+  var dragState = null;
+  var catDragState = null;
+  var editingCatKey = null;
+
+  function uid(){
+    return Math.random().toString(36).slice(2,9);
+  }
+
+  function slugify(text){
+    return (text.toLowerCase()
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-+|-+$)/g, "")) || "categoria";
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function countAll(){
+    var total=0, toBuy=0;
+    state.categories.forEach(function(cat){
+      cat.items.forEach(function(it){
+        total++;
+        if(it.toBuy) toBuy++;
+      });
+    });
+    return {total:total, toBuy:toBuy};
+  }
+
+  function findCat(key){
+    return state.categories.find(function(c){ return c.key === key; });
+  }
+
+  function render(){
+    var app = document.getElementById("app");
+    var visibleCats = onlyPending
+      ? state.categories.filter(function(c){ return c.items.some(function(i){ return i.toBuy; }); })
+      : state.categories;
+
+    if(onlyPending && visibleCats.length === 0){
+      app.innerHTML = '<p class="empty-note">Todavía no has marcado ningún producto. Vuelve al catálogo completo para elegir qué necesitas.</p>';
+    } else {
+      app.innerHTML = visibleCats.map(renderCategory).join("");
+    }
+
+    var addCatSection = document.getElementById("addCategorySection");
+    addCatSection.hidden = onlyPending;
+
+    var counts = countAll();
+    document.getElementById("pendingCount").textContent = counts.toBuy;
+
+    var sub = document.getElementById("subtitle");
+    if(counts.total === 0){
+      sub.textContent = "Añade productos con el botón + de cada categoría.";
+    } else if(onlyPending){
+      sub.textContent = counts.toBuy === 0
+        ? "Ya no queda nada pendiente."
+        : "Desmarca cada producto según lo metas en el carro.";
+    } else {
+      sub.textContent = counts.toBuy === 0
+        ? "Marca lo que necesitas comprar."
+        : "Cuando vayas a la tienda, pulsa “ver solo estos” para ir más rápido.";
+    }
+
+    var toggleBtn = document.getElementById("pendingToggle");
+    toggleBtn.classList.toggle("active", onlyPending);
+    toggleBtn.querySelector(".toggle-label").textContent = onlyPending
+      ? "pendientes — ver todo el catálogo"
+      : "por comprar — ver solo estos";
+
+    var resetBtn = document.getElementById("resetAll");
+    resetBtn.disabled = counts.toBuy === 0;
+
+    attachHandlers();
+  }
+
+  function renderCategory(cat){
+    var toBuyCount = cat.items.filter(function(i){ return i.toBuy; }).length;
+    var itemsForView = onlyPending ? cat.items.filter(function(i){ return i.toBuy; }) : cat.items;
+
+    var itemsHtml = itemsForView.map(function(it){
+      return (
+        '<li class="item' + (it.toBuy ? ' tobuy' : '') + '" data-cat="' + cat.key + '" data-id="' + it.id + '">' +
+          '<label class="check">' +
+            '<input type="checkbox" ' + (it.toBuy ? 'checked' : '') + ' aria-label="' + escapeHtml(it.text) + '">' +
+            '<span class="item-text">' + escapeHtml(it.text) + '</span>' +
+          '</label>' +
+          (onlyPending ? '' :
+            '<button class="del" type="button" aria-label="Eliminar ' + escapeHtml(it.text) + '">&times;</button>' +
+            '<button class="drag-handle" type="button" aria-label="Reordenar ' + escapeHtml(it.text) + '"><span></span><span></span><span></span></button>'
+          ) +
+        '</li>'
+      );
+    }).join("");
+
+    var catStyle = cat.color
+      ? ('--cat-color:' + cat.color)
+      : ('--cat-light:' + (cat.lightColor || 'var(--accent)') + ';--cat-dark:' + (cat.darkColor || cat.lightColor || 'var(--accent)'));
+
+    var titleHtml = (cat.key === editingCatKey)
+      ? (
+          '<form class="cat-rename-form" data-cat="' + cat.key + '">' +
+            '<input type="text" class="cat-rename-input" value="' + escapeHtml(cat.label) + '" autocomplete="off">' +
+            '<button type="submit" aria-label="Guardar nombre">&check;</button>' +
+            '<button type="button" class="cat-rename-cancel" aria-label="Cancelar">&times;</button>' +
+          '</form>'
+        )
+      : '<h2>' + escapeHtml(cat.label) + '</h2>';
+
+    var headActionsHtml = (onlyPending || cat.key === editingCatKey) ? '' : (
+      '<div class="cat-head-actions">' +
+        '<button class="cat-edit" type="button" data-cat="' + cat.key + '" aria-label="Renombrar ' + escapeHtml(cat.label) + '">&#9998;</button>' +
+        '<button class="cat-delete" type="button" data-cat="' + cat.key + '" aria-label="Eliminar categoría ' + escapeHtml(cat.label) + '">&#128465;</button>' +
+        '<button class="cat-drag-handle" type="button" data-cat="' + cat.key + '" aria-label="Reordenar categoría ' + escapeHtml(cat.label) + '"><span></span><span></span><span></span></button>' +
+      '</div>'
+    );
+
+    return (
+      '<section class="category" data-cat="' + cat.key + '" style="' + catStyle + '">' +
+        '<div class="cat-head">' +
+          '<div class="cat-head-info">' +
+            titleHtml +
+            (cat.key === editingCatKey ? '' : '<span class="cat-count">' + toBuyCount + '/' + cat.items.length + '</span>') +
+          '</div>' +
+          headActionsHtml +
+        '</div>' +
+        '<ul class="items">' + itemsHtml + '</ul>' +
+        (onlyPending ? '' :
+          '<form class="add-form" data-cat="' + cat.key + '">' +
+            '<input type="text" name="text" placeholder="Añadir a ' + escapeHtml(cat.label.toLowerCase()) + '&hellip;" autocomplete="off">' +
+            '<button type="submit" aria-label="Añadir">+</button>' +
+          '</form>'
+        ) +
+      '</section>'
+    );
+  }
+
+  // Guarda una copia local instantánea y envía el estado completo a
+  // Firebase; los demás dispositivos lo reciben en cuanto tengan conexión.
+  function pushState(){
+    saveLocalCache();
+    set(stateRef, state).catch(function(){
+      /* sin conexión ahora mismo: el cambio queda en este dispositivo y
+         se reintentará solo en cuanto vuelva la conexión, sin perder nada
+         mientras la página siga abierta */
+    });
+  }
+
+  function onDragMove(e){
+    if(!dragState) return;
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var overLi = el && el.closest ? el.closest('li.item[data-cat="' + dragState.catKey + '"]') : null;
+    if(!overLi) return;
+    var overId = overLi.dataset.id;
+    if(overId === dragState.itemId) return;
+    var cat = findCat(dragState.catKey);
+    if(!cat) return;
+    var fromIdx = cat.items.findIndex(function(i){ return i.id === dragState.itemId; });
+    var toIdx = cat.items.findIndex(function(i){ return i.id === overId; });
+    if(fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+    var moved = cat.items.splice(fromIdx, 1)[0];
+    cat.items.splice(toIdx, 0, moved);
+    render();
+    var newLi = document.querySelector('li.item[data-cat="' + dragState.catKey + '"][data-id="' + dragState.itemId + '"]');
+    if(newLi) newLi.classList.add("dragging");
+  }
+
+  function onDragEnd(){
+    document.removeEventListener("pointermove", onDragMove);
+    document.removeEventListener("pointerup", onDragEnd);
+    document.removeEventListener("pointercancel", onDragEnd);
+    if(dragState){
+      var li = document.querySelector('li.item[data-cat="' + dragState.catKey + '"][data-id="' + dragState.itemId + '"]');
+      if(li) li.classList.remove("dragging");
+      dragState = null;
+      pushState();
+    }
+  }
+
+  function onCatDragMove(e){
+    if(!catDragState) return;
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var overSection = el && el.closest ? el.closest('section.category[data-cat]') : null;
+    if(!overSection) return;
+    var overKey = overSection.dataset.cat;
+    if(overKey === catDragState.catKey) return;
+    var fromIdx = state.categories.findIndex(function(c){ return c.key === catDragState.catKey; });
+    var toIdx = state.categories.findIndex(function(c){ return c.key === overKey; });
+    if(fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+    var moved = state.categories.splice(fromIdx, 1)[0];
+    state.categories.splice(toIdx, 0, moved);
+    render();
+    var newSection = document.querySelector('section.category[data-cat="' + catDragState.catKey + '"]');
+    if(newSection) newSection.classList.add("dragging");
+  }
+
+  function onCatDragEnd(){
+    document.removeEventListener("pointermove", onCatDragMove);
+    document.removeEventListener("pointerup", onCatDragEnd);
+    document.removeEventListener("pointercancel", onCatDragEnd);
+    if(catDragState){
+      var section = document.querySelector('section.category[data-cat="' + catDragState.catKey + '"]');
+      if(section) section.classList.remove("dragging");
+      catDragState = null;
+      pushState();
+    }
+  }
+
+  function attachHandlers(){
+    document.querySelectorAll("li.item input[type=checkbox]").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var li = cb.closest("li.item");
+        var cat = findCat(li.dataset.cat);
+        var item = cat.items.find(function(i){ return i.id === li.dataset.id; });
+        if(item){ item.toBuy = cb.checked; }
+        render();
+        pushState();
+      });
+    });
+
+    document.querySelectorAll("li.item button.del").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var li = btn.closest("li.item");
+        var cat = findCat(li.dataset.cat);
+        cat.items = cat.items.filter(function(i){ return i.id !== li.dataset.id; });
+        render();
+        pushState();
+      });
+    });
+
+    document.querySelectorAll("li.item button.drag-handle").forEach(function(handle){
+      handle.addEventListener("pointerdown", function(e){
+        e.preventDefault();
+        var li = handle.closest("li.item");
+        dragState = { catKey: li.dataset.cat, itemId: li.dataset.id };
+        li.classList.add("dragging");
+        document.addEventListener("pointermove", onDragMove);
+        document.addEventListener("pointerup", onDragEnd);
+        document.addEventListener("pointercancel", onDragEnd);
+      });
+    });
+
+    document.querySelectorAll("button.cat-edit").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        editingCatKey = btn.dataset.cat;
+        render();
+        var input = document.querySelector('form.cat-rename-form[data-cat="' + editingCatKey + '"] input');
+        if(input){ input.focus(); input.select(); }
+      });
+    });
+
+    document.querySelectorAll("button.cat-delete").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var cat = findCat(btn.dataset.cat);
+        if(!cat) return;
+        var msg = cat.items.length
+          ? '¿Eliminar la categoría "' + cat.label + '" y sus ' + cat.items.length + ' productos?'
+          : '¿Eliminar la categoría "' + cat.label + '"?';
+        if(!window.confirm(msg)) return;
+        state.categories = state.categories.filter(function(c){ return c.key !== btn.dataset.cat; });
+        render();
+        pushState();
+      });
+    });
+
+    document.querySelectorAll("button.cat-drag-handle").forEach(function(handle){
+      handle.addEventListener("pointerdown", function(e){
+        e.preventDefault();
+        catDragState = { catKey: handle.dataset.cat };
+        var section = handle.closest("section.category");
+        if(section) section.classList.add("dragging");
+        document.addEventListener("pointermove", onCatDragMove);
+        document.addEventListener("pointerup", onCatDragEnd);
+        document.addEventListener("pointercancel", onCatDragEnd);
+      });
+    });
+
+    document.querySelectorAll("form.cat-rename-form").forEach(function(form){
+      form.addEventListener("submit", function(ev){
+        ev.preventDefault();
+        var input = form.querySelector("input");
+        var text = input.value.trim();
+        var cat = findCat(form.dataset.cat);
+        editingCatKey = null;
+        if(cat && text){
+          cat.label = text;
+          render();
+          pushState();
+        } else {
+          render();
+        }
+      });
+      var cancelBtn = form.querySelector(".cat-rename-cancel");
+      if(cancelBtn){
+        cancelBtn.addEventListener("click", function(){
+          editingCatKey = null;
+          render();
+        });
+      }
+      var input = form.querySelector("input");
+      if(input){
+        input.addEventListener("keydown", function(e){
+          if(e.key === "Escape"){
+            editingCatKey = null;
+            render();
+          }
+        });
+      }
+    });
+
+    document.querySelectorAll("form.add-form").forEach(function(form){
+      form.addEventListener("submit", function(ev){
+        ev.preventDefault();
+        var input = form.querySelector("input[name=text]");
+        var text = input.value.trim();
+        if(!text) return;
+        var cat = findCat(form.dataset.cat);
+        cat.items.push({id: uid(), text: text, toBuy:false});
+        input.value = "";
+        render();
+        pushState();
+        var freshInput = document.querySelector('form.add-form[data-cat="' + form.dataset.cat + '"] input[name=text]');
+        if(freshInput) freshInput.focus();
+      });
+    });
+  }
+
+  document.getElementById("resetAll").addEventListener("click", function(){
+    state.categories.forEach(function(cat){
+      cat.items.forEach(function(i){ i.toBuy = false; });
+    });
+    render();
+    pushState();
+  });
+
+  document.getElementById("pendingToggle").addEventListener("click", function(){
+    onlyPending = !onlyPending;
+    render();
+  });
+
+  document.getElementById("addCategoryForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var input = document.getElementById("newCategoryName");
+    var text = input.value.trim();
+    if(!text) return;
+
+    var base = slugify(text);
+    var key = base;
+    var n = 2;
+    var existingKeys = state.categories.map(function(c){ return c.key; });
+    while(existingKeys.indexOf(key) !== -1){
+      key = base + "-" + n;
+      n++;
+    }
+
+    var customCount = state.categories.filter(function(c){ return c.lightColor; }).length;
+    var palette = CUSTOM_PALETTE[customCount % CUSTOM_PALETTE.length];
+
+    state.categories.push({
+      key: key,
+      label: text,
+      color: null,
+      lightColor: palette.light,
+      darkColor: palette.dark,
+      items: []
+    });
+
+    input.value = "";
+    render();
+    pushState();
+  });
+
+  function exportBackup(){
+    try{
+      var data = JSON.stringify(state, null, 2);
+      var blob = new Blob([data], {type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var stamp = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = "lista-compra-copia-" + stamp + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    }catch(e){
+      window.alert("No se pudo generar la copia de seguridad.");
+    }
+  }
+
+  function importBackup(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        if(!parsed || !Array.isArray(parsed.categories)) throw new Error("formato inválido");
+        state = reconcile(parsed);
+        onlyPending = false;
+        render();
+        pushState();
+        window.alert("Copia restaurada correctamente.");
+      }catch(e){
+        window.alert("El archivo no parece una copia de seguridad válida de esta lista.");
+      }
+    };
+    reader.onerror = function(){
+      window.alert("No se pudo leer el archivo.");
+    };
+    reader.readAsText(file);
+  }
+
+  function exportCatalog(){
+    try{
+      var catalogOnly = {
+        categories: state.categories.map(function(cat){
+          return {
+            key: cat.key,
+            label: cat.label,
+            color: cat.color || null,
+            lightColor: cat.lightColor || null,
+            darkColor: cat.darkColor || null,
+            items: cat.items.map(function(it){
+              return {id: it.id, text: it.text, toBuy: false};
+            })
+          };
+        })
+      };
+      var data = JSON.stringify(catalogOnly, null, 2);
+      var blob = new Blob([data], {type:"application/json"});
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var stamp = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = "catalogo-compra-" + stamp + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    }catch(e){
+      window.alert("No se pudo generar el catálogo.");
+    }
+  }
+
+  document.getElementById("exportBackup").addEventListener("click", exportBackup);
+  document.getElementById("exportCatalog").addEventListener("click", exportCatalog);
+  document.getElementById("importBackupBtn").addEventListener("click", function(){
+    document.getElementById("importBackupInput").click();
+  });
+  document.getElementById("importBackupInput").addEventListener("change", function(e){
+    var file = e.target.files && e.target.files[0];
+    if(file) importBackup(file);
+    e.target.value = "";
+  });
+
+  render();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("service-worker.js").catch(function(){ /* sin service worker: la app sigue funcionando igual */ });
+    });
+  }
+
+  // Escucha los cambios en la nube: al primer dato, sustituye lo local;
+  // si la base de datos está vacía (primera vez), la siembra con lo que
+  // ya hubiera en este dispositivo.
+  onValue(stateRef, function(snapshot){
+    var val = snapshot.val();
+    if(val && Array.isArray(val.categories)){
+      state = reconcile(val);
+      saveLocalCache();
+      render();
+    } else {
+      set(stateRef, state).catch(function(){});
+    }
+  }, function(){
+    /* sin permiso o sin conexión: seguimos con la copia local */
+  });
+
+  var syncStatusEl = document.getElementById("syncStatus");
+  var syncTextEl = document.getElementById("syncText");
+  onValue(connectedRef, function(snapshot){
+    var connected = snapshot.val() === true;
+    syncStatusEl.classList.toggle("online", connected);
+    syncStatusEl.classList.toggle("offline", !connected);
+    syncTextEl.textContent = connected
+      ? "Sincronizado entre tus dispositivos"
+      : "Sin conexión — los cambios se guardan en este dispositivo";
+  });
+</script>
+</body>
+</html>
