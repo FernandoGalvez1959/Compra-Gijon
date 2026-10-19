@@ -1,4 +1,4 @@
-<!doctype html> 
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
@@ -541,7 +541,6 @@
   <header class="top">
     <h1>Compra Gijón</h1>
     <p class="sub" id="subtitle">Marca lo que necesitas comprar.</p>
-    <p class="sync-status" id="syncStatus"><span class="dot"></span><span id="syncText">Conectando…</span></p>
     <button class="pending-toggle" id="pendingToggle" type="button">
       <strong id="pendingCount">0</strong>
       <span class="toggle-label">por comprar — ver solo estos</span>
@@ -572,9 +571,7 @@
   </section>
 </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-database.js";
+<script>
 
   "use strict";
 
@@ -723,25 +720,9 @@
     }catch(e){ /* no se pudo guardar en caché local: seguimos igualmente */ }
   }
 
-  // --- Firebase: sincronización en tiempo real entre dispositivos ---
-  var firebaseConfig = {
-    apiKey: "AIzaSyA51LrR0fzSyeoH5-d6jwuLbriVDwYrWHo",
-    authDomain: "lista-compra-gijon.firebaseapp.com",
-    databaseURL: "https://lista-compra-gijon-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "lista-compra-gijon",
-    storageBucket: "lista-compra-gijon.firebasestorage.app",
-    messagingSenderId: "480620503938",
-    appId: "1:480620503938:web:4a2df4a28e90d4f18f259b"
-  };
-
-  var fbApp = initializeApp(firebaseConfig);
-  var db = getDatabase(fbApp);
-  var stateRef = ref(db, "state");
-  var connectedRef = ref(db, ".info/connected");
-
   // Estado en memoria: arranca con la última copia guardada en este
   // dispositivo (para que la app se vea al instante, incluso sin conexión)
-  // y en cuanto llega la primera respuesta de Firebase, la nube manda.
+  
   var state = loadLocalCache();
   var onlyPending = false;
   var dragState = null;
@@ -884,15 +865,9 @@
     );
   }
 
-  // Guarda una copia local instantánea y envía el estado completo a
-  // Firebase; los demás dispositivos lo reciben en cuanto tengan conexión.
+  // Guarda el estado en este dispositivo (localStorage).
   function pushState(){
     saveLocalCache();
-    set(stateRef, state).catch(function(){
-      /* sin conexión ahora mismo: el cambio queda en este dispositivo y
-         se reintentará solo en cuanto vuelva la conexión, sin perder nada
-         mientras la página siga abierta */
-    });
   }
 
   function onDragMove(e){
@@ -1209,32 +1184,6 @@
     });
   }
 
-  // Escucha los cambios en la nube: al primer dato, sustituye lo local;
-  // si la base de datos está vacía (primera vez), la siembra con lo que
-  // ya hubiera en este dispositivo.
-  onValue(stateRef, function(snapshot){
-    var val = snapshot.val();
-    if(val && Array.isArray(val.categories)){
-      state = reconcile(val);
-      saveLocalCache();
-      render();
-    } else {
-      set(stateRef, state).catch(function(){});
-    }
-  }, function(){
-    /* sin permiso o sin conexión: seguimos con la copia local */
-  });
-
-  var syncStatusEl = document.getElementById("syncStatus");
-  var syncTextEl = document.getElementById("syncText");
-  onValue(connectedRef, function(snapshot){
-    var connected = snapshot.val() === true;
-    syncStatusEl.classList.toggle("online", connected);
-    syncStatusEl.classList.toggle("offline", !connected);
-    syncTextEl.textContent = connected
-      ? "Sincronizado entre tus dispositivos"
-      : "Sin conexión — los cambios se guardan en este dispositivo";
-  });
 </script>
 </body>
 </html>
