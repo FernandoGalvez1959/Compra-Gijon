@@ -33,9 +33,6 @@ self.addEventListener("activate", function(event){
 self.addEventListener("fetch", function(event){
   if(event.request.method !== "GET") return;
 
-  // La página principal (HTML) se pide siempre a la red primero, para que
-  // una actualización de la app se vea de inmediato; si no hay conexión,
-  // se sirve la última copia guardada.
   if(event.request.mode === "navigate"){
     event.respondWith(
       fetch(event.request).then(function(response){
@@ -51,8 +48,6 @@ self.addEventListener("fetch", function(event){
     return;
   }
 
-  // El resto de archivos (iconos, manifest…) se sirven de la caché primero
-  // y se refrescan en segundo plano.
   event.respondWith(
     caches.match(event.request).then(function(cached){
       var network = fetch(event.request).then(function(response){

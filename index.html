@@ -661,10 +661,6 @@
     });
   }
 
-  // Combina lo recibido (de la nube o de una copia de seguridad) con la
-  // plantilla: conserva el orden, los nombres, los productos y las marcas
-  // tal como llegan. Las categorías por defecto que faltan (porque el
-  // usuario las eliminó) no se vuelven a añadir solas.
   function reconcile(saved){
     var defByKey = {};
     cloneDefault().categories.forEach(function(c){ defByKey[c.key] = c; });
@@ -679,13 +675,8 @@
       if(def){
         merged.push({
           key: def.key,
-          // Se respeta el nombre si el usuario ha renombrado la categoría;
-          // el color de las categorías por defecto se mantiene fijo.
           label: c.label || def.label,
           color: def.color,
-          // Firebase borra las listas vacías al guardarlas: si "items" no
-          // llega, es que la categoría se quedó sin productos, no que haya
-          // que descartarla.
           items: normalizeItems(c.items || [])
         });
       } else {
@@ -710,18 +701,16 @@
         var parsed = JSON.parse(raw);
         if(parsed && Array.isArray(parsed.categories)) return reconcile(parsed);
       }
-    }catch(e){ /* localStorage no disponible: seguimos con el estado por defecto */ }
+    }catch(e){ }
     return cloneDefault();
   }
 
   function saveLocalCache(){
     try{
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }catch(e){ /* no se pudo guardar en caché local: seguimos igualmente */ }
+    }catch(e){ }
   }
 
-  // Estado en memoria: arranca con la última copia guardada en este
-  // dispositivo (para que la app se vea al instante, incluso sin conexión)
   
   var state = loadLocalCache();
   var onlyPending = false;
@@ -865,7 +854,6 @@
     );
   }
 
-  // Guarda el estado en este dispositivo (localStorage).
   function pushState(){
     saveLocalCache();
   }
@@ -1180,7 +1168,7 @@
 
   if("serviceWorker" in navigator){
     window.addEventListener("load", function(){
-      navigator.serviceWorker.register("service-worker.js").catch(function(){ /* sin service worker: la app sigue funcionando igual */ });
+      navigator.serviceWorker.register("service-worker.js").catch(function(){ });
     });
   }
 
