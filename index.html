@@ -1082,15 +1082,21 @@
     pushState();
   });
 
+  function fechaCopia(){
+    var d = new Date();
+    var m = String(d.getMonth()+1); if(m.length<2) m = "0"+m;
+    var dd = String(d.getDate()); if(dd.length<2) dd = "0"+dd;
+    return d.getFullYear() + m + dd;
+  }
+
   function exportBackup(){
     try{
       var data = JSON.stringify(state, null, 2);
       var blob = new Blob([data], {type:"application/json"});
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      var stamp = new Date().toISOString().slice(0,10);
       a.href = url;
-      a.download = "lista-compra-copia-" + stamp + ".json";
+      a.download = "Compra Gijón " + fechaCopia() + ".json";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1141,9 +1147,8 @@
       var blob = new Blob([data], {type:"application/json"});
       var url = URL.createObjectURL(blob);
       var a = document.createElement("a");
-      var stamp = new Date().toISOString().slice(0,10);
       a.href = url;
-      a.download = "catalogo-compra-" + stamp + ".json";
+      a.download = "Compra Gijón (catálogo) " + fechaCopia() + ".json";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1163,6 +1168,18 @@
     if(file) importBackup(file);
     e.target.value = "";
   });
+
+  if(navigator.storage && navigator.storage.persist){
+    navigator.storage.persist().catch(function(){});
+  }
+
+  try{
+    var hoy = fechaCopia();
+    if(window.localStorage.getItem(STORAGE_KEY + "-ultima-copia") !== hoy){
+      window.localStorage.setItem(STORAGE_KEY + "-ultima-copia", hoy);
+      setTimeout(exportBackup, 1500);
+    }
+  }catch(e){}
 
   render();
 
